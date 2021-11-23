@@ -1,13 +1,15 @@
 use std::default::Default;
 use std::fmt;
+use std::ops;
+
+
+
 
 /// A generic matrix struct which defines addition, multiplication and other essential operations.
 ///
 /// Due to the fact that this matrix is generic, most operations will not be defined properly.
 /// However, for all numeric types this works fine. This has the added benefit that you can define
 /// your own custom type and its corresponding operations, and it'll work out of the box.
-
-
 
 struct Matrix<T: Default> {
     rows: usize,
@@ -19,10 +21,6 @@ impl<T: 'static> fmt::Display for Matrix<T> where
     T:  Default + fmt::Display,
     &'static T: fmt::Display {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        //TODO: 1) get the length of the longest string representation
-        //      2) right pad all other string reps
-        //      3) insert a line break every time [columns] items have passed
-        //      4) add unicode box drawing characters for the edges
         let mut string_reps: Vec::<String> = vec![String::from(""); self.contents.len()];
         let mut longest = 0;
         for e in &self.contents {
@@ -62,6 +60,7 @@ impl<T: 'static> fmt::Display for Matrix<T> where
 }
 
 impl<T: Default> Matrix<T> {
+    /// Returns an all-zero matrix of the given size.
     fn zeroes(rows: usize, columns: usize) -> Matrix::<f64> {
         Matrix::<f64> {
             rows: rows,
@@ -69,7 +68,8 @@ impl<T: Default> Matrix<T> {
             contents: vec![0f64; rows * columns]
         }
     }
-
+    
+    /// Returns an all-ones matrix of the given size.
     fn ones(rows: usize, columns: usize) -> Matrix::<f64> {
         Matrix::<f64> {
             rows: rows,
@@ -78,6 +78,10 @@ impl<T: Default> Matrix<T> {
         }
     }
 
+    /// Returns a matrix of the given size and populates it with the given data.
+    /// 
+    /// Note that if more elements are supplied than the matrix can hold,
+    /// this will panic. If less are given, the remaining slots are filled with zeroes.
     fn new(rows: usize, columns: usize, mut elements: Vec<T>) -> Matrix::<T> {
         if elements.len() > rows * columns {
             panic!("{elements} elements were given, but a {rows} by {columns} matrix can only hold {max}.",
@@ -98,10 +102,25 @@ impl<T: Default> Matrix<T> {
     }
 }
 
+impl<T: Default + Clone> ops::Add<Matrix<T>> for Matrix<T> {
+    type Output = Matrix<T>;
+    fn add(self, o: Matrix<T>) -> Matrix<T> {
+        assert!(self.columns == o.columns && self.rows == o.rows, "Can only add matrices of the same dimension.");
+        Matrix::<T> {
+            rows: self.rows, 
+            columns: self.columns, 
+            contents: vec![T::default(); self.rows * self.columns] //TODO: make this do the proper addition
+        }
+    }
+}
+
 
 fn main() {
-    let m: Matrix<i32> = Matrix::new(3, 2, vec![1, 2, 3, 90000, 5]);
-    println!("{}", m);
+    let m1: Matrix<f64> = Matrix::new(3, 2, vec![1.0, 2.5, 3.14, 90000.22, 5.11111111]);
+    println!("{}", m1);
 
-    println!("{}", Matrix::<f64>::ones(8, 8))
+    let m2: Matrix<f64> = Matrix::<f64>::ones(3, 2);
+    println!("{}", m2);
+
+    println!("{}", m1 + m2);
 }
