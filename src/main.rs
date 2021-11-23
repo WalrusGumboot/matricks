@@ -3,8 +3,6 @@ use std::fmt;
 use std::ops;
 
 
-
-
 /// A generic matrix struct which defines addition, multiplication and other essential operations.
 ///
 /// Due to the fact that this matrix is generic, most operations will not be defined properly.
@@ -83,13 +81,13 @@ impl<T: Default> Matrix<T> {
     /// Note that if more elements are supplied than the matrix can hold,
     /// this will panic. If less are given, the remaining slots are filled with zeroes.
     fn new(rows: usize, columns: usize, mut elements: Vec<T>) -> Matrix::<T> {
-        if elements.len() > rows * columns {
-            panic!("{elements} elements were given, but a {rows} by {columns} matrix can only hold {max}.",
-                   elements = elements.len(),
-                   rows = rows,
-                   columns = columns,
-                   max = rows * columns)
-        }
+        assert!(elements.len() <= rows * columns, 
+                "{elements} elements were given, but a {rows} by {columns} matrix can only hold {max}.",
+                elements = elements.len(),
+                rows = rows,
+                columns = columns,
+                max = rows * columns
+        );
         
         //this line is to make sure that the length is always correct
         elements.resize_with(rows * columns, Default::default); 
@@ -102,21 +100,33 @@ impl<T: Default> Matrix<T> {
     }
 }
 
-impl<T: Default + Clone> ops::Add<Matrix<T>> for Matrix<T> {
+/// The (admittedly quite ugly) Add implementation for matrices.
+/// 
+/// If a Matrix is of non-numerical type, it can still be added if that type implements
+/// a closed Add. In this context, 'closed' means that the addition operation cannot return
+/// a different type than it started with (for example, adding two integers can never give you a fraction).
+
+impl<T: Default + Clone + ops::Add<Output = T> + Copy> ops::Add<Matrix<T>> for Matrix<T> {
     type Output = Matrix<T>;
     fn add(self, o: Matrix<T>) -> Matrix<T> {
         assert!(self.columns == o.columns && self.rows == o.rows, "Can only add matrices of the same dimension.");
+        
+        let mut result: Vec<T> = Vec::new();
+        for i in 0..self.contents.len() {
+            result.push(self.contents[i] + o.contents[i]);
+        }
+        
         Matrix::<T> {
             rows: self.rows, 
             columns: self.columns, 
-            contents: vec![T::default(); self.rows * self.columns] //TODO: make this do the proper addition
+            contents: result
         }
     }
 }
 
 
 fn main() {
-    let m1: Matrix<f64> = Matrix::new(3, 2, vec![1.0, 2.5, 3.14, 90000.22, 5.11111111]);
+    let m1: Matrix<f64> = Matrix::new(3, 2, vec![1.0, 2.5, 3.141, 9.22, 5.1]);
     println!("{}", m1);
 
     let m2: Matrix<f64> = Matrix::<f64>::ones(3, 2);
