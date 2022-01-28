@@ -124,6 +124,58 @@ impl<T: Default + Clone + ops::Add<Output = T> + Copy> ops::Add<Matrix<T>> for M
     }
 }
 
+/// Multiplication. Again, quite ugly, but it'll have to do.
+///
+/// Note that matrix multiplication is not commutative. This means that
+/// it's entirely possible that A * B is valid, but B * A is not. Even if
+/// they are both valid, they don't necessarily have to have the same value.
+
+impl<T: Default + Clone + ops::Mul<Output = T> + Copy> ops::Mul<Matrix<T>> for Matrix<T> {
+    type Output = Matrix<T>;
+    fn mul(self, o: Matrix<T>) -> Matrix<T> {
+        assert!(self.columns == o.rows, 
+            "Matrices of dimensions ({}, {}) and ({}, {}) aren't multiplicable.",
+            self.rows, self.columns, o.rows, o.columns);
+            
+        let mut result: Vec<T> = Vec::new();
+        for i in 0..self.contents.len() {
+            result.push(); //TODO: make this work
+        }
+
+        Matrix::<T> {
+            rows: self.rows,
+            columns: o.columns,
+            contents: result
+        }
+    }
+}
+
+// TODO: TEST THIS FFS
+
+/// Hadamard multiplication
+/// 
+/// If a Matrix is of non-numerical type, it can still be multiplied if that type implements
+/// a closed Mul. In this context, 'closed' means that the addition operation cannot return
+/// a different type than it started with (for example, multiplying two integers can never 
+/// give you a fraction).
+
+impl<T: Default + Clone + ops::Mul<Output = T> + Copy> for Matrix<T> {
+    fn hadamard(self, o: Matrix<T>) -> Matrix<T> {
+        assert!(self.columns == o.columns && self.rows == o.rows, "Can only perform Hadamard multiplication on matrices of the same dimension.");
+        
+        let mut result: Vec<T> = Vec::new();
+        for i in 0..self.contents.len() {
+            result.push(self.contents[i] * o.contents[i]);
+        }
+        
+        Matrix::<T> {
+            rows: self.rows, 
+            columns: self.columns, 
+            contents: result
+        }
+    }
+}
+
 
 fn main() {
     let m1: Matrix<f64> = Matrix::new(3, 2, vec![1.0, 2.5, 3.141, 9.22, 5.1]);
