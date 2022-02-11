@@ -59,11 +59,15 @@ impl<T: 'static> fmt::Display for Matrix<T> where
 
 impl<T: Default> Matrix<T> {
     /// Returns an all-zero matrix of the given size.
-    fn zeroes(rows: usize, columns: usize) -> Matrix::<f64> {
-        Matrix::<f64> {
+    ///
+    /// Note that for numerical types, Default::default is expected to
+    /// return the representation of a zero. This is to allow other, non-standard
+    /// types to be instantiated with this function
+    fn zeroes(rows: usize, columns: usize) -> Matrix::<T> {
+        Matrix::<T> {
             rows: rows,
             columns: columns, 
-            contents: vec![0f64; rows * columns]
+            contents: vec![Default::default(); rows * columns]
         }
     }
     
@@ -138,8 +142,10 @@ impl<T: Default + Clone + ops::Mul<Output = T> + Copy> ops::Mul<Matrix<T>> for M
             self.rows, self.columns, o.rows, o.columns);
             
         let mut result: Vec<T> = Vec::new();
-        for i in 0..self.contents.len() {
-            result.push(); //TODO: make this work
+        for y in 0..self.rows {
+            for x in 0..o.columns {
+
+            }
         }
 
         Matrix::<T> {
@@ -177,12 +183,25 @@ impl<T: Default + Clone + ops::Mul<Output = T> + Copy> for Matrix<T> {
 }
 
 
-fn main() {
-    let m1: Matrix<f64> = Matrix::new(3, 2, vec![1.0, 2.5, 3.141, 9.22, 5.1]);
-    println!("{}", m1);
+#[cfg(test)]
 
-    let m2: Matrix<f64> = Matrix::<f64>::ones(3, 2);
-    println!("{}", m2);
+mod tests {
+    use super::*;
 
-    println!("{}", m1 + m2);
+    #[test]
+    fn unitary_addition() {
+        let o: Matrix<f64> = Matrix::ones(rows: 3, columns: 4);
+        let z: Matrix<f64> = Matrix::zeroes(rows: 3, columns: 4);
+
+        assert_eq!(o, z + o)
+    }
+
+    #[test]
+    #[should_panic]
+    fn unequal_dimension_add() {
+        let p: Matrix<f64> = Matrix::ones(rows: 3, columns: 7);
+        let q: Matrix<f64> = Matrix::ones(rows: 5, columns: 6);
+
+        println!("{}", p + q);
+    }
 }
